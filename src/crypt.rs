@@ -233,7 +233,7 @@ mod tests {
 
     #[test]
     #[cfg(target_os = "windows")]
-    fn test_decrypt_chromium_cookie_value() {
+    fn test_decrypt_chromium_cookie_value_key() {
         let key: Vec<u8> = [
             253, 98, 31, 229, 162, 180, 2, 83, 157, 250, 20, 124, 169, 39, 39, 120,
         ]
@@ -243,7 +243,7 @@ mod tests {
         ]
         .to_vec();
         let res = "55650728";
-        let r = decrypt_chromium_cookie_value(&key, &val).unwrap();
+        let r = decrypt_chromium_cookie_value(&Some(key), &val).unwrap();
         assert_eq!(r, res);
     }
 }

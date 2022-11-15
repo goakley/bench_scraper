@@ -151,8 +151,12 @@ mod tests {
         let connection = make_mem_connection();
         let conn = &connection.connection;
         conn.execute(CHROMIUM_TABLE, []).unwrap();
+        #[cfg(target_os = "windows")]
+        let key = None;
+        #[cfg(any(target_os = "linux", target_os = "macos"))]
+        let key = Vec::default();
         let result = connection
-            .fetch_sqlite_cookies(SqliteBrowserEngine::Chromium(Vec::default()))
+            .fetch_sqlite_cookies(SqliteBrowserEngine::Chromium(key))
             .unwrap();
         assert!(result.is_empty());
         let result = connection.fetch_sqlite_cookies(SqliteBrowserEngine::Firefox);
@@ -177,7 +181,11 @@ mod tests {
         let connection = make_mem_connection();
         let conn = &connection.connection;
         conn.execute(FIREFOX_TABLE, []).unwrap();
-        let result = connection.fetch_sqlite_cookies(SqliteBrowserEngine::Chromium(Vec::default()));
+        #[cfg(target_os = "windows")]
+        let key = None;
+        #[cfg(any(target_os = "linux", target_os = "macos"))]
+        let key = Vec::default();
+        let result = connection.fetch_sqlite_cookies(SqliteBrowserEngine::Chromium(key));
         match result {
             Err(Error::SQLError(rusqlite::Error::SqliteFailure(
                 libsqlite3_sys::Error {
