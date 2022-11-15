@@ -83,8 +83,11 @@ pub fn get_chromium_master_key(name: &str) -> Result<ChromiumKey, Error> {
     let output = std::process::Command::new("security")
         .args(["find-generic-password", "-wa", name])
         .output()?;
-    output.exit_status.exit_ok()?;
-    let secret = str::from_utf8(output.stdout).trim().as_bytes();
+    if !output.status.success() {
+        return Err(Error::IOError(std::io::Error::new(std::io::ErrorKind::Other, "process `find-generic-password` failed")))
+    }
+    // remove any newlines that are part of the "nice" output
+    let secret: Vec<u8> = output.stdout.into_iter().filter(|b| (*b as char) != '\n' && (*b as char) != '\r').collect();
     let salt = pbkdf2::password_hash::SaltString::b64_encode(CHROMIUM_SALT)?;
     let hash = pbkdf2::Pbkdf2.hash_password_customized(
         &secret,
