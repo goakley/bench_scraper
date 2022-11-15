@@ -52,7 +52,7 @@ fn get_sqlite_dbs(path: &std::path::Path, depth: usize, name: &str) -> Vec<std::
     result
 }
 
-fn get_chromium_cookies(path: &std::path::Path, key: Vec<u8>) -> Vec<Result<Vec<Cookie>, Error>> {
+fn get_chromium_cookies(path: &std::path::Path, key: ChromiumKey) -> Vec<Result<Vec<Cookie>, Error>> {
     get_sqlite_dbs(path, 2, "cookies.sqlite")
         .iter()
         .map(|filepath| {

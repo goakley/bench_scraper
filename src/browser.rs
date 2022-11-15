@@ -39,13 +39,13 @@ impl KnownBrowser {
             #[cfg(target_os = "macos")]
             KnownBrowser::Chrome => KnownEngine::Chromium("Chrome"),
             #[cfg(target_os = "windows")]
-            KnownBrowser::Chrome => KnownEngine::Chromium(None),
+            KnownBrowser::Chrome => KnownEngine::Chromium(""),
             #[cfg(target_os = "linux")]
             KnownBrowser::Chromium => KnownEngine::Chromium("Chromium Safe Storage"),
             #[cfg(target_os = "macos")]
             KnownBrowser::Chromium => KnownEngine::Chromium("Chromium"),
             #[cfg(target_os = "windows")]
-            KnownBrowser::Chromium => KnownEngine::Chromium(None),
+            KnownBrowser::Chromium => KnownEngine::Chromium(""),
         }
     }
 

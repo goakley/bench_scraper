@@ -1,7 +1,7 @@
 #![warn(missing_docs)]
 use strum_macros::EnumIter;
 
-use crate::crypt::decrypt_chromium_cookie_value;
+use crate::crypt::{ChromiumKey, ChromiumKeyRef, decrypt_chromium_cookie_value};
 use crate::Cookie;
 use crate::Error;
 
@@ -13,13 +13,13 @@ const FIREFOX_QUERY: &str = "SELECT name, value, host, path, expiry, creationTim
 /// An enumeration of all known SQLite-based browser engines.
 pub enum SqliteBrowserEngine {
     /// A Chromium-based browser, whose cookies are encrypted by a specific key.
-    Chromium(Vec<u8>),
+    Chromium(ChromiumKey),
     /// A Firefox-based browser.
     Firefox,
 }
 
 fn parse_chromium_sql_row(
-    key: &[u8],
+    key: ChromiumKeyRef,
     row: &rusqlite::Row,
 ) -> Result<Option<Cookie>, rusqlite::Error> {
     let value: String = row.get(1)?;

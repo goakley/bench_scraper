@@ -23,12 +23,12 @@ pub type ChromiumKey = Vec<u8>;
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 pub type ChromiumKeyRef<'a> = &'a [u8];
 #[cfg(target_os = "windows")]
-pub type ChromiumKey = Option<Vec<[u8]>>;
+pub type ChromiumKey = Option<Vec<u8>>;
 #[cfg(target_os = "windows")]
-pub type ChromiumKeyRef = &Option<Vec<[u8]>>;
+pub type ChromiumKeyRef<'a> = &'a Option<Vec<u8>>;
 
 fn decrypt_aes128cbc_value(
-    key: ChromiumKeyRef,
+    key: &[u8],
     value: &[u8],
 ) -> Result<Vec<u8>, block_padding::UnpadError> {
     // https://gist.github.com/creachadair/937179894a24571ce9860e2475a2d2ec
@@ -126,7 +126,7 @@ pub fn decrypt_chromium_cookie_value(key: ChromiumKeyRef, value: &[u8]) -> Optio
 pub fn decrypt_chromium_cookie_value(key: ChromiumKeyRef, value: &[u8]) -> Option<String> {
     match key {
         Some(k) => todo!(),
-        None => String::from_utf8(dpapi_crypt_unprotected_data(value)?),
+        None => String::from_utf8(dpapi_crypt_unprotected_data(value).ok()?).ok(),
     }
 }
 
