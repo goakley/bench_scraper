@@ -27,10 +27,7 @@ pub type ChromiumKey = Option<Vec<u8>>;
 #[cfg(target_os = "windows")]
 pub type ChromiumKeyRef<'a> = &'a Option<Vec<u8>>;
 
-fn decrypt_aes128cbc_value(
-    key: &[u8],
-    value: &[u8],
-) -> Result<Vec<u8>, block_padding::UnpadError> {
+fn decrypt_aes128cbc_value(key: &[u8], value: &[u8]) -> Result<Vec<u8>, block_padding::UnpadError> {
     // https://gist.github.com/creachadair/937179894a24571ce9860e2475a2d2ec
     let iv = [32u8; 16];
     let dec = Aes128CbcDec::new(key.into(), &iv.into());
@@ -40,18 +37,35 @@ fn decrypt_aes128cbc_value(
 }
 
 #[cfg(target_os = "windows")]
-fn dpapi_crypt_unprotected_data(data: &[u8]) -> Result<Vec<u8>, ()> {
-    // TODO: wtf is this
-    /*
-    let mut null = std::ptr::null_mut(),
-    let mut c_uchar_array: [winapi::shared::minwindef::BYTE; 4096] = [0; 4096];
-    let mut blob = winapi::um::wincrypt::CRYPTOAPI_BLOB {
-        cbData: 0,
-        pbData: c_uchar_array,
+fn dpapi_crypt_unprotected_data(data: &[u8]) -> Result<Vec<u8>, Error> {
+    let mut vec = data.to_vec();
+    let mut p_data_in = winapi::um::wincrypt::CRYPTOAPI_BLOB {
+        cbData: vec.len() as u32,
+        pbData: vec.as_mut_ptr(),
     };
-    winapi::um::dpapi::CryptUnprotectData(data.as_mut_ptr(), null, null, null, null, null, blob);
-     */
-    todo!();
+    let mut p_data_out = winapi::um::wincrypt::CRYPTOAPI_BLOB {
+        cbData: 0,
+        pbData: std::ptr::null_mut(),
+    };
+    unsafe {
+        let success = winapi::um::dpapi::CryptUnprotectData(
+            &mut p_data_in,
+            std::ptr::null_mut(),
+            std::ptr::null_mut(),
+            std::ptr::null_mut(),
+            std::ptr::null_mut(),
+            0,
+            &mut p_data_out,
+        );
+        if success == 0 {
+            return Err(Error::DPAPIError("Failed to unprotect data"));
+        }
+        let size: usize = p_data_out.cbData.try_into().unwrap();
+        let mut result: Vec<u8> = Vec::with_capacity(size);
+        result.as_mut_ptr().copy_from(p_data_out.pbData, size);
+        winapi::um::winbase::LocalFree(p_data_out.pbData as *mut std::ffi::c_void);
+        Ok(result)
+    }
 }
 
 /// Loads the key used to encrypt Chromium browser cookies.
@@ -84,10 +98,17 @@ pub fn get_chromium_master_key(name: &str) -> Result<ChromiumKey, Error> {
         .args(["find-generic-password", "-wa", name])
         .output()?;
     if !output.status.success() {
-        return Err(Error::IOError(std::io::Error::new(std::io::ErrorKind::Other, "process `find-generic-password` failed")))
+        return Err(Error::IOError(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "process `find-generic-password` failed",
+        )));
     }
     // remove any newlines that are part of the "nice" output
-    let secret: Vec<u8> = output.stdout.into_iter().filter(|b| (*b as char) != '\n' && (*b as char) != '\r').collect();
+    let secret: Vec<u8> = output
+        .stdout
+        .into_iter()
+        .filter(|b| (*b as char) != '\n' && (*b as char) != '\r')
+        .collect();
     let salt = pbkdf2::password_hash::SaltString::b64_encode(CHROMIUM_SALT)?;
     let hash = pbkdf2::Pbkdf2.hash_password_customized(
         &secret,

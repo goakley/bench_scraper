@@ -6,6 +6,9 @@ pub enum Error {
     #[cfg(target_os = "linux")]
     /// An error that originated from the Linux Secret Service API (used for managing cookie encryption keys).
     SecretServiceError(secret_service::Error),
+    #[cfg(target_os = "windows")]
+    /// An error that originated from the Windows Data Protection API (used for managing cookie encryption keys).
+    DPAPIError(&'static str),
     /// An error that occurred while decrypting a secret.
     PasswordHashError(pbkdf2::password_hash::errors::Error),
     /// A failure while working with the filesystem.

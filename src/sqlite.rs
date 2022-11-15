@@ -1,7 +1,7 @@
 #![warn(missing_docs)]
 use strum_macros::EnumIter;
 
-use crate::crypt::{ChromiumKey, ChromiumKeyRef, decrypt_chromium_cookie_value};
+use crate::crypt::{decrypt_chromium_cookie_value, ChromiumKey, ChromiumKeyRef};
 use crate::Cookie;
 use crate::Error;
 
