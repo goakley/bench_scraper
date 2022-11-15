@@ -1,5 +1,7 @@
 #![warn(missing_docs)]
 // https://textslashplain.com/2020/09/28/local-data-encryption-in-chromium/
+use aes_gcm::aead::Aead;
+use aes_gcm::KeyInit;
 use cbc::cipher::BlockDecryptMut;
 use cbc::cipher::KeyIvInit;
 use pbkdf2::password_hash::PasswordHasher;
@@ -34,6 +36,13 @@ fn decrypt_aes128cbc_value(key: &[u8], value: &[u8]) -> Result<Vec<u8>, block_pa
     let mut v: Vec<u8> = value.to_vec();
     let slice = dec.decrypt_padded_mut::<block_padding::Pkcs7>(&mut v)?;
     Ok(slice.to_vec())
+}
+
+fn decrypt_aesgcm(key: &[u8], value: &[u8], nonce: &[u8]) -> Option<Vec<u8>> {
+    // https://source.chromium.org/chromium/chromium/src/+/master:components/os_crypt/os_crypt_win.cc
+    let cipher = aes_gcm::Aes128Gcm::new_from_slice(key).ok()?;
+    let nonce = aes_gcm::Nonce::from_slice(nonce);
+    cipher.decrypt(nonce, value).ok()
 }
 
 #[cfg(target_os = "windows")]
@@ -146,7 +155,7 @@ pub fn decrypt_chromium_cookie_value(key: ChromiumKeyRef, value: &[u8]) -> Optio
 #[cfg(target_os = "windows")]
 pub fn decrypt_chromium_cookie_value(key: ChromiumKeyRef, value: &[u8]) -> Option<String> {
     match key {
-        Some(k) => todo!(),
+        Some(k) => String::from_utf8(decrypt_aesgcm(k, &value[15..], &value[3..14])?).ok(),
         None => String::from_utf8(dpapi_crypt_unprotected_data(value).ok()?).ok(),
     }
 }
@@ -187,6 +196,23 @@ mod tests {
         let res2: Vec<u8> = [53, 53, 54, 53, 48, 55, 50, 56].to_vec();
         let r2 = decrypt_aes128cbc_value(&key, &val2).unwrap();
         assert_eq!(r2, res2);
+    }
+
+    #[test]
+    fn test_decrypt_aesgcm() {
+        let key: Vec<u8> = [
+            253, 98, 31, 229, 162, 180, 2, 83, 157, 250, 20, 124, 169, 39, 39, 120,
+        ]
+        .to_vec();
+        let nonce: Vec<u8> = b"unique nonce".to_vec();
+        let value = [
+            44, 190, 201, 171, 54, 136, 24, 12, 142, 64, 90, 137, 115, 233, 230, 233, 240, 87, 89,
+            27, 140, 173, 225, 138, 193, 110, 109, 134, 216, 141, 45, 89, 131,
+        ]
+        .to_vec();
+        let res: Vec<u8> = b"plaintext message".to_vec();
+        let r = decrypt_aesgcm(&key, &value, &nonce).unwrap();
+        assert_eq!(r, res);
     }
 
     #[test]
