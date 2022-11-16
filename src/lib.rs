@@ -56,7 +56,7 @@ fn get_chromium_cookies(
     path: &std::path::Path,
     key: ChromiumKey,
 ) -> Vec<Result<Vec<Cookie>, Error>> {
-    get_sqlite_dbs(path, 2, "cookies.sqlite")
+    get_sqlite_dbs(path, 2, "Cookies")
         .iter()
         .map(|filepath| {
             let connection = Connection::open_sqlite(filepath)?;
