@@ -4,15 +4,11 @@
 //! Bench scraper abstracts this complexity into a few easy-to-use functions.
 //!
 //! ```rust
-//! use bench_scraper::find_cookies;
-//!
-//! fn main() {
-//!     let browser_cookies = find_cookies().unwrap();
-//!     for browser_cookie in browser_cookies.iter() {
-//!         println!("Cookies for '{:?}'", browser_cookie.browser);
-//!         for cookie in browser_cookie.cookies.iter() {
-//!             println!("    '{:?}'", cookie);
-//!         }
+//! let browser_cookies = bench_scraper::find_cookies().unwrap();
+//! for browser_cookie in browser_cookies.iter() {
+//!     println!("Cookies for '{:?}'", browser_cookie.browser);
+//!     for cookie in browser_cookie.cookies.iter() {
+//!         println!("    '{:?}'", cookie);
 //!     }
 //! }
 //! ```
@@ -97,12 +93,9 @@ pub struct KnownBrowserCookies {
 pub fn find_cookies() -> Result<Vec<KnownBrowserCookies>, Error> {
     let mut all_cookies = Vec::default();
     for browser in KnownBrowser::iter() {
-        match browser.default_config_path() {
-            Some(path) => {
-                let mut cookies = find_cookies_at(browser, &path);
-                all_cookies.append(&mut cookies);
-            }
-            None => {}
+        if let Some(path) = browser.default_config_path() {
+            let mut cookies = find_cookies_at(browser, &path);
+            all_cookies.append(&mut cookies);
         }
     }
     Ok(all_cookies)
@@ -117,34 +110,23 @@ pub fn find_cookies_at(browser: KnownBrowser, path: &std::path::Path) -> Vec<Kno
     let mut all_cookies = Vec::default();
     match browser.engine() {
         KnownEngine::Firefox => {
-            for r in get_firefox_cookies(path).into_iter() {
-                match r {
-                    Ok(cookies) => {
-                        all_cookies.push(KnownBrowserCookies {
-                            browser: browser.clone(),
-                            cookies,
-                        });
-                    }
-                    Err(_) => {}
+            for cookies in get_firefox_cookies(path).into_iter().flatten() {
+                all_cookies.push(KnownBrowserCookies {
+                    browser: browser.clone(),
+                    cookies,
+                });
+            }
+        }
+        KnownEngine::Chromium(name) => {
+            if let Ok(key) = get_chromium_master_key(name) {
+                for cookies in get_chromium_cookies(path, key).into_iter().flatten() {
+                    all_cookies.push(KnownBrowserCookies {
+                        browser: browser.clone(),
+                        cookies,
+                    });
                 }
             }
         }
-        KnownEngine::Chromium(name) => match get_chromium_master_key(name) {
-            Ok(key) => {
-                for r in get_chromium_cookies(path, key).into_iter() {
-                    match r {
-                        Ok(cookies) => {
-                            all_cookies.push(KnownBrowserCookies {
-                                browser: browser.clone(),
-                                cookies,
-                            });
-                        }
-                        Err(_) => {}
-                    }
-                }
-            }
-            Err(_) => {}
-        },
     };
     all_cookies
 }
