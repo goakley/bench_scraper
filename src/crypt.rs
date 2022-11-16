@@ -155,7 +155,7 @@ pub fn decrypt_chromium_cookie_value(key: ChromiumKeyRef, value: &[u8]) -> Optio
 #[cfg(target_os = "windows")]
 pub fn decrypt_chromium_cookie_value(key: ChromiumKeyRef, value: &[u8]) -> Option<String> {
     match key {
-        Some(k) => String::from_utf8(decrypt_aesgcm(k, &value[15..], &value[3..14])?).ok(),
+        Some(k) => String::from_utf8(decrypt_aesgcm(k, &value[15..], &value[3..15])?).ok(),
         None => String::from_utf8(dpapi_crypt_unprotected_data(value).ok()?).ok(),
     }
 }
@@ -239,10 +239,12 @@ mod tests {
         ]
         .to_vec();
         let val: Vec<u8> = [
-            19, 0, 250, 71, 166, 243, 159, 53, 216, 173, 206, 11, 134, 237, 189, 224, 73, 209, 101,
+            19, 0, 250, 117, 110, 105, 113, 117, 101, 32, 110, 111, 110, 99, 101, 44, 190, 201,
+            171, 54, 136, 24, 12, 142, 64, 90, 137, 115, 233, 230, 233, 240, 87, 89, 27, 140, 173,
+            225, 138, 193, 110, 109, 134, 216, 141, 45, 89, 131,
         ]
         .to_vec();
-        let res = "55650728";
+        let res = "plaintext message";
         let r = decrypt_chromium_cookie_value(&Some(key), &val).unwrap();
         assert_eq!(r, res);
     }
