@@ -15,7 +15,8 @@ fn main() {
                 &format!("{:?}", cookie.is_secure),
                 &format!("{:?}", cookie.is_http_only),
                 &format!("{:?}", cookie.last_accessed),
-            ]).unwrap();
+            ])
+            .unwrap();
         }
     }
 }

@@ -2,8 +2,14 @@
 name = "bench_scraper"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+authors = ["Glen Oakley <goakley123@gmail.com>"]
+description = "A library for grabbing browser cookies from a filesystem"
+documentation = "https://docs.rs/bench_scraper"
+readme = "README.md"
+repository = "https://github.com/goakley/bench_scraper/"
+license = "MIT OR Apache-2.0"
+keywords = ["browser", "firefox", "chrome", "chromium", "cookies"]
+categories = ["filesystem", "network-programming", "web-programming"]
 
 [lib]
 name = "bench_scraper"
