@@ -29,6 +29,7 @@ pub type ChromiumKey = Option<Vec<u8>>;
 #[cfg(target_os = "windows")]
 pub type ChromiumKeyRef<'a> = &'a Option<Vec<u8>>;
 
+#[allow(dead_code)]
 fn decrypt_aes128cbc_value(key: &[u8], value: &[u8]) -> Result<Vec<u8>, block_padding::UnpadError> {
     // https://gist.github.com/creachadair/937179894a24571ce9860e2475a2d2ec
     let iv = [32u8; 16];
@@ -38,6 +39,7 @@ fn decrypt_aes128cbc_value(key: &[u8], value: &[u8]) -> Result<Vec<u8>, block_pa
     Ok(slice.to_vec())
 }
 
+#[allow(dead_code)]
 fn decrypt_aesgcm(key: &[u8], value: &[u8], nonce: &[u8]) -> Option<Vec<u8>> {
     // https://source.chromium.org/chromium/chromium/src/+/master:components/os_crypt/os_crypt_win.cc
     let cipher = aes_gcm::Aes128Gcm::new_from_slice(key).ok()?;
