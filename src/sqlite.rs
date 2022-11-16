@@ -5,7 +5,7 @@ use crate::crypt::{decrypt_chromium_cookie_value, ChromiumKey, ChromiumKeyRef};
 use crate::Cookie;
 use crate::Error;
 
-const CHROMIUM_QUERY: &str = "SELECT name, value, host_key, path, expires_utc, creation_utc, is_secure, is_httponly, last_access_utc, encrypted_value FROM cookies";
+const CHROMIUM_QUERY: &str = "SELECT name, value, host_key, path, expires_utc, creation_utc, is_secure, is_httponly, last_access_utc, encrypted_value, has_expires FROM cookies";
 const FIREFOX_QUERY: &str = "SELECT name, value, host, path, expiry, creationTime, isSecure, isHttpOnly, lastAccessed FROM moz_cookies";
 
 #[derive(Debug, EnumIter)]
@@ -30,17 +30,30 @@ fn parse_chromium_sql_row(
         (v, []) => Some(v.to_string()),
         _ => None,
     };
+    // TODO: all the times are fucked up - I don't know what chrome is doing (LDAP time maybe?)
     let last_accessed: i64 = row.get(8)?;
     let last_accessed_time =
         time::OffsetDateTime::from_unix_timestamp(last_accessed / 1000000000).ok();
-    Ok(match (real_value, last_accessed_time) {
-        (Some(rv), Some(lat)) => Some(Cookie {
+    let creation: i64 = row.get(5)?;
+    let creation_time =
+        time::OffsetDateTime::from_unix_timestamp(creation / 1000000000).ok();
+    let has_expires: bool = row.get(10)?;
+    let expiration_time = if has_expires {
+        let expiry: i64 = row.get(4)?;
+        time::OffsetDateTime::from_unix_timestamp(expiry / 1000000000).ok()
+    } else {
+        None
+    };
+    Ok(match (real_value, last_accessed_time, creation_time) {
+        (Some(rv), Some(lat), Some(ct)) => Some(Cookie {
             name: row.get(0)?,
             value: rv,
             host: row.get(2)?,
             path: row.get(3)?,
             is_secure: row.get(6)?,
             is_http_only: row.get(7)?,
+            creation_time: ct,
+            expiration_time,
             last_accessed: lat,
         }),
         _ => None,
@@ -51,17 +64,25 @@ fn parse_firefox_sql_row(row: &rusqlite::Row) -> Result<Option<Cookie>, rusqlite
     let last_accessed: i64 = row.get(8)?;
     let last_accessed_time =
         time::OffsetDateTime::from_unix_timestamp(last_accessed / 1000000).ok();
-    match last_accessed_time {
-        Some(lat) => Ok(Some(Cookie {
+    let creation: i64 = row.get(5)?;
+    let creation_time =
+        time::OffsetDateTime::from_unix_timestamp(creation / 1000000).ok();
+    let expiry: i64 = row.get(4)?;
+    let expiration_time =
+        time::OffsetDateTime::from_unix_timestamp(expiry).ok();
+    match (last_accessed_time, creation_time) {
+        (Some(lat), Some(ct)) => Ok(Some(Cookie {
             name: row.get(0)?,
             value: row.get(1)?,
             host: row.get(2)?,
             path: row.get(3)?,
             is_secure: row.get(6)?,
             is_http_only: row.get(7)?,
+            creation_time: ct,
+            expiration_time,
             last_accessed: lat,
         })),
-        None => Ok(None),
+        _ => Ok(None),
     }
 }
 

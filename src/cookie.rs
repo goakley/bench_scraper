@@ -14,8 +14,10 @@ pub struct Cookie {
     pub is_secure: bool,
     /// Whether the cookie should be hidden from client-side scripting (javascript).
     pub is_http_only: bool,
-    // TODO: creation_time
-    // TODO: expiration_time
+    /// When the cookie was first registered with the browser.
+    pub creation_time: time::OffsetDateTime,
+    /// When the cookie will no longer be valid.
+    pub expiration_time: Option<time::OffsetDateTime>,
     // TODO: samesite stuff
     /// The last time this cookie was accessed by the browser.
     pub last_accessed: time::OffsetDateTime,
@@ -35,7 +37,11 @@ impl Cookie {
         if !self.name.starts_with("__Host-") {
             properties.push(format!("Domain={}", self.host));
         }
-        // TODO: Expires https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Date
+        if let Some(expiration) = self.expiration_time {
+            if let Ok(format) = expiration.format(&time::format_description::well_known::Rfc2822) {
+                properties.push(format!("Expires={}", format));
+            }
+        }
         if self.is_secure {
             properties.push("Secure".to_string())
         }
