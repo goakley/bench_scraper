@@ -13,7 +13,7 @@ cbc = "0.1.2"
 dirs = "4.0.0"
 libsqlite3-sys = "0.25.2"
 pbkdf2 = { version = "0.11.0", features = ["sha1"] }
-rusqlite = "0.28.0"
+rusqlite = { version = "0.28.0", features = ["bundled"] }
 strum = "0.24.1"
 strum_macros = "0.24"
 tempfile = "3.3.0"
