@@ -14,7 +14,10 @@ fn main() {
                 &cookie.value,
                 &format!("{:?}", cookie.is_secure),
                 &format!("{:?}", cookie.is_http_only),
+                &format!("{:?}", cookie.same_site),
+                &format!("{:?}", cookie.creation_time),
                 &format!("{:?}", cookie.last_accessed),
+                &format!("{:?}", cookie.expiration_time),
             ])
             .unwrap();
         }
