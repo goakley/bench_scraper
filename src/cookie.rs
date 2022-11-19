@@ -1,10 +1,22 @@
 #![warn(missing_docs)]
+
+#[derive(Debug, PartialEq, Eq)]
+/// The [SameSite](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite) policy for a cookie.
+pub enum SameSite {
+    /// Cookies are not sent on normal cross-site subrequests, but are sent when a user is navigating to the origin site.
+    Lax,
+    /// Cookies will only be sent in a first-party context and not be sent along with requests initiated by third party websites.
+    Strict,
+    /// Cookies will be sent in all contexts, i.e. in responses to both first-party and cross-site requests.
+    None,
+}
+
 #[derive(Debug, PartialEq, Eq)]
 /// A single HTTP cookie.
 pub struct Cookie {
-    /// The host (domain) with which this cookie is associated.
+    /// The host (domain) with which the cookie is associated.
     pub host: String,
-    /// The path under which this cookie should be used when making requests.
+    /// The path under which the cookie should be used when making requests.
     pub path: String,
     /// The name of the cookie.
     pub name: String,
@@ -18,8 +30,9 @@ pub struct Cookie {
     pub creation_time: time::OffsetDateTime,
     /// When the cookie will no longer be valid.
     pub expiration_time: Option<time::OffsetDateTime>,
-    // TODO: samesite stuff
-    /// The last time this cookie was accessed by the browser.
+    /// The SameSite setting for the cookie (which may not have been specified).
+    pub same_site: Option<SameSite>,
+    /// The last time the cookie was accessed by the browser.
     pub last_accessed: time::OffsetDateTime,
 }
 
@@ -47,6 +60,13 @@ impl Cookie {
         }
         if self.is_http_only {
             properties.push("HttpOnly".to_string());
+        }
+        if let Some(ss) = &self.same_site {
+            properties.push(format!("SameSite={}", match ss {
+                SameSite::Lax => "Lax",
+                SameSite::Strict => "Strict",
+                SameSite::None => "None",
+            }));
         }
         // TODO: samesite stuff
         properties.join("; ")

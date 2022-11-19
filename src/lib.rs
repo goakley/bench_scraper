@@ -29,6 +29,7 @@ use crate::sqlite::*;
 pub use crate::browser::KnownBrowser;
 pub use crate::browser::KnownEngine;
 pub use crate::cookie::Cookie;
+pub use crate::cookie::SameSite;
 pub use crate::error::Error;
 
 fn get_sqlite_dbs(path: &std::path::Path, depth: usize, name: &str) -> Vec<std::path::PathBuf> {

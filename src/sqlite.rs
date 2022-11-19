@@ -2,10 +2,10 @@
 use strum_macros::EnumIter;
 
 use crate::crypt::{decrypt_chromium_cookie_value, ChromiumKey, ChromiumKeyRef};
-use crate::Cookie;
+use crate::{Cookie, SameSite};
 use crate::Error;
 
-const CHROMIUM_QUERY: &str = "SELECT name, value, host_key, path, expires_utc, creation_utc, is_secure, is_httponly, last_access_utc, encrypted_value, has_expires FROM cookies";
+const CHROMIUM_QUERY: &str = "SELECT name, value, host_key, path, expires_utc, creation_utc, is_secure, is_httponly, last_access_utc, encrypted_value, has_expires, samesite FROM cookies";
 const FIREFOX_QUERY: &str = "SELECT name, value, host, path, expiry, creationTime, isSecure, isHttpOnly, lastAccessed FROM moz_cookies";
 
 #[derive(Debug, EnumIter)]
@@ -43,6 +43,13 @@ fn parse_chromium_sql_row(
     } else {
         None
     };
+    let same_site_i: i64 = row.get(11)?;
+    let same_site = match same_site_i {
+        0 => Some(SameSite::None),
+        1 => Some(SameSite::Lax),
+        2 => Some(SameSite::Strict),
+        _ => None,
+    };
     Ok(match (real_value, last_accessed_time, creation_time) {
         (Some(rv), Some(lat), Some(ct)) => Some(Cookie {
             name: row.get(0)?,
@@ -53,6 +60,7 @@ fn parse_chromium_sql_row(
             is_http_only: row.get(7)?,
             creation_time: ct,
             expiration_time,
+            same_site,
             last_accessed: lat,
         }),
         _ => None,
@@ -69,6 +77,14 @@ fn parse_firefox_sql_row(row: &rusqlite::Row) -> Result<Option<Cookie>, rusqlite
     let expiry: i64 = row.get(4)?;
     let expiration_time =
         time::OffsetDateTime::from_unix_timestamp(expiry).ok();
+    let same_site_i: i64 = row.get(11)?;
+    // firefox does not appear to support unset - everything is just '0'
+    let same_site = match same_site_i {
+        0 => Some(SameSite::None),
+        1 => Some(SameSite::Lax),
+        2 => Some(SameSite::Strict),
+        _ => None,
+    };
     match (last_accessed_time, creation_time) {
         (Some(lat), Some(ct)) => Ok(Some(Cookie {
             name: row.get(0)?,
@@ -79,6 +95,7 @@ fn parse_firefox_sql_row(row: &rusqlite::Row) -> Result<Option<Cookie>, rusqlite
             is_http_only: row.get(7)?,
             creation_time: ct,
             expiration_time,
+            same_site,
             last_accessed: lat,
         })),
         _ => Ok(None),
