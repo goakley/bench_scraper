@@ -6,7 +6,7 @@ use crate::Error;
 use crate::{Cookie, SameSite};
 
 const CHROMIUM_QUERY: &str = "SELECT name, value, host_key, path, expires_utc, creation_utc, is_secure, is_httponly, last_access_utc, encrypted_value, has_expires, samesite FROM cookies";
-const FIREFOX_QUERY: &str = "SELECT name, value, host, path, expiry, creationTime, isSecure, isHttpOnly, lastAccessed FROM moz_cookies";
+const FIREFOX_QUERY: &str = "SELECT name, value, host, path, expiry, creationTime, isSecure, isHttpOnly, lastAccessed, sameSite FROM moz_cookies";
 
 #[derive(Debug, EnumIter)]
 #[non_exhaustive]
@@ -75,8 +75,9 @@ fn parse_firefox_sql_row(row: &rusqlite::Row) -> Result<Option<Cookie>, rusqlite
     let creation_time = time::OffsetDateTime::from_unix_timestamp(creation / 1000000).ok();
     let expiry: i64 = row.get(4)?;
     let expiration_time = time::OffsetDateTime::from_unix_timestamp(expiry).ok();
-    let same_site_i: i64 = row.get(11)?;
-    // firefox does not appear to support unset - everything is just '0'
+    let same_site_i: i64 = row.get(9)?;
+    // when using sameSite (and not rawSameSite), 1 (lax) can appear if no samesite was specified
+    // (which means no entries have a number that's not 0-2)
     let same_site = match same_site_i {
         0 => Some(SameSite::None),
         1 => Some(SameSite::Lax),
