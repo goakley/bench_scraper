@@ -2,8 +2,8 @@
 use strum_macros::EnumIter;
 
 use crate::crypt::{decrypt_chromium_cookie_value, ChromiumKey, ChromiumKeyRef};
-use crate::{Cookie, SameSite};
 use crate::Error;
+use crate::{Cookie, SameSite};
 
 const CHROMIUM_QUERY: &str = "SELECT name, value, host_key, path, expires_utc, creation_utc, is_secure, is_httponly, last_access_utc, encrypted_value, has_expires, samesite FROM cookies";
 const FIREFOX_QUERY: &str = "SELECT name, value, host, path, expiry, creationTime, isSecure, isHttpOnly, lastAccessed FROM moz_cookies";
@@ -72,11 +72,9 @@ fn parse_firefox_sql_row(row: &rusqlite::Row) -> Result<Option<Cookie>, rusqlite
     let last_accessed_time =
         time::OffsetDateTime::from_unix_timestamp(last_accessed / 1000000).ok();
     let creation: i64 = row.get(5)?;
-    let creation_time =
-        time::OffsetDateTime::from_unix_timestamp(creation / 1000000).ok();
+    let creation_time = time::OffsetDateTime::from_unix_timestamp(creation / 1000000).ok();
     let expiry: i64 = row.get(4)?;
-    let expiration_time =
-        time::OffsetDateTime::from_unix_timestamp(expiry).ok();
+    let expiration_time = time::OffsetDateTime::from_unix_timestamp(expiry).ok();
     let same_site_i: i64 = row.get(11)?;
     // firefox does not appear to support unset - everything is just '0'
     let same_site = match same_site_i {

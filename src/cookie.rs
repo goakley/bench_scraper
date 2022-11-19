@@ -62,11 +62,14 @@ impl Cookie {
             properties.push("HttpOnly".to_string());
         }
         if let Some(ss) = &self.same_site {
-            properties.push(format!("SameSite={}", match ss {
-                SameSite::Lax => "Lax",
-                SameSite::Strict => "Strict",
-                SameSite::None => "None",
-            }));
+            properties.push(format!(
+                "SameSite={}",
+                match ss {
+                    SameSite::Lax => "Lax",
+                    SameSite::Strict => "Strict",
+                    SameSite::None => "None",
+                }
+            ));
         }
         // TODO: samesite stuff
         properties.join("; ")
@@ -96,7 +99,7 @@ impl TryFrom<Cookie> for reqwest::header::HeaderValue {
 
 #[cfg(feature = "reqwest")]
 impl FromIterator<Cookie> for reqwest::cookie::Jar {
-    fn from_iter<I: IntoIterator<Item=Cookie>>(iter: I) -> reqwest::cookie::Jar {
+    fn from_iter<I: IntoIterator<Item = Cookie>>(iter: I) -> reqwest::cookie::Jar {
         let jar = reqwest::cookie::Jar::default();
         for cookie in iter {
             let set_cookie = cookie.get_set_cookie_header();
