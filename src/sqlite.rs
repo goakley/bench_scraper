@@ -30,17 +30,16 @@ fn parse_chromium_sql_row(
         (v, []) => Some(v.to_string()),
         _ => None,
     };
-    // TODO: all the times are fucked up - I don't know what chrome is doing (LDAP time maybe?)
     let last_accessed: i64 = row.get(8)?;
     let last_accessed_time =
-        time::OffsetDateTime::from_unix_timestamp(last_accessed / 1000000000).ok();
+        time::OffsetDateTime::from_unix_timestamp((last_accessed / 1000000) - 11644473600).ok();
     let creation: i64 = row.get(5)?;
     let creation_time =
-        time::OffsetDateTime::from_unix_timestamp(creation / 1000000000).ok();
+        time::OffsetDateTime::from_unix_timestamp((creation / 1000000) - 11644473600).ok();
     let has_expires: bool = row.get(10)?;
     let expiration_time = if has_expires {
         let expiry: i64 = row.get(4)?;
-        time::OffsetDateTime::from_unix_timestamp(expiry / 1000000000).ok()
+        time::OffsetDateTime::from_unix_timestamp((expiry / 1000000) - 11644473600).ok()
     } else {
         None
     };
