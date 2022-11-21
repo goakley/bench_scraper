@@ -1,5 +1,10 @@
 # Bench Scraper
 
+<a href="https://github.com/goakley/bench_scraper/actions?query=branch%3Amain"><img src="https://img.shields.io/github/workflow/status/goakley/bench_scraper/CI/main" /></a>
+<a href="https://crates.io/crates/bench_scraper"><img src="https://img.shields.io/crates/v/bench_scraper" /></a>
+<a href="https://docs.rs/bench_scraper/"><img src="https://img.shields.io/docsrs/bench_scraper" /></a>
+<img src="https://img.shields.io/crates/l/bench_scraper" />
+
 Bench Scraper is a library for grabbing browser cookies from a filesystem.
 
 Different browsers store their cookies in different locations, with different encryption methods, in different ways across operating system.
