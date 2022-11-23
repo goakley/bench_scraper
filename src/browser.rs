@@ -27,6 +27,11 @@ pub enum KnownBrowser {
     ///
     /// [`Chromium`]: https://www.chromium.org/chromium-projects/
     Chromium,
+    /// [`Microsoft Edge`], the Windows 10/11 default browser.
+    ///
+    /// [`Microsoft Edge`]: https://www.microsoft.com/edge/
+    #[cfg(target_os = "windows")]
+    Edge,
 }
 
 impl KnownBrowser {
@@ -46,6 +51,8 @@ impl KnownBrowser {
             KnownBrowser::Chromium => KnownEngine::Chromium("Chromium"),
             #[cfg(target_os = "windows")]
             KnownBrowser::Chromium => KnownEngine::Chromium(""),
+            #[cfg(target_os = "windows")]
+            KnownBrowser::Edge => KnownEngine::Chromium(""),
         }
     }
 
@@ -93,6 +100,10 @@ impl KnownBrowser {
             #[cfg(target_os = "windows")]
             KnownBrowser::Chromium => {
                 dirs::data_local_dir().map(|p| p.join("Chromium").join("User Data"))
+            }
+            #[cfg(target_os = "windows")]
+            KnownBrowser::Edge => {
+                dirs::data_local_dir().map(|p| p.join("Microsoft").join("Edge").join("User Data"))
             }
         }
     }

@@ -21,6 +21,7 @@ mod crypt;
 mod error;
 mod sqlite;
 
+use log::debug;
 use strum::IntoEnumIterator;
 
 use crate::crypt::*;
@@ -36,14 +37,17 @@ fn get_sqlite_dbs(path: &std::path::Path, depth: usize, name: &str) -> Vec<std::
     let mut result = Vec::default();
     for entry_result in walkdir::WalkDir::new(path)
         .follow_links(true)
-        .min_depth(depth)
+        .min_depth(0)
         .max_depth(depth)
         .into_iter()
-        .filter_entry(|e| e.file_name() == name)
     {
         match entry_result {
             Err(_) => {}
-            Ok(entry) => result.push(entry.into_path()),
+            Ok(entry) => {
+                if entry.file_name() == name {
+                    result.push(entry.into_path());
+                }
+            }
         }
     }
     result
@@ -53,9 +57,10 @@ fn get_chromium_cookies(
     path: &std::path::Path,
     key: ChromiumKey,
 ) -> Vec<Result<Vec<Cookie>, Error>> {
-    get_sqlite_dbs(path, 2, "Cookies")
+    get_sqlite_dbs(path, 3, "Cookies")
         .iter()
         .map(|filepath| {
+            debug!("Found Chromium cookies at: {:?}", filepath);
             let connection = Connection::open_sqlite(filepath)?;
             let values =
                 connection.fetch_sqlite_cookies(SqliteBrowserEngine::Chromium(key.clone()))?;
@@ -119,7 +124,7 @@ pub fn find_cookies_at(browser: KnownBrowser, path: &std::path::Path) -> Vec<Kno
             }
         }
         KnownEngine::Chromium(name) => {
-            if let Ok(key) = get_chromium_master_key(name) {
+            if let Ok(key) = get_chromium_master_key(name, path) {
                 for cookies in get_chromium_cookies(path, key).into_iter().flatten() {
                     all_cookies.push(KnownBrowserCookies {
                         browser: browser.clone(),
