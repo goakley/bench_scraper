@@ -71,7 +71,6 @@ impl Cookie {
                 }
             ));
         }
-        // TODO: samesite stuff
         properties.join("; ")
     }
 
