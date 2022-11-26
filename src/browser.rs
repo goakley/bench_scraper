@@ -65,11 +65,7 @@ impl KnownBrowser {
             #[cfg(target_os = "linux")]
             KnownBrowser::Firefox => dirs::home_dir().map(|p| p.join(".mozilla").join("firefox")),
             #[cfg(target_os = "macos")]
-            KnownBrowser::Firefox => dirs::home_dir().map(|p| {
-                p.join("Library")
-                    .join("Application Support")
-                    .join("Firefox")
-            }),
+            KnownBrowser::Firefox => dirs::data_dir().map(|p| p.join("Firefox")),
             #[cfg(target_os = "windows")]
             KnownBrowser::Firefox => {
                 dirs::data_dir().map(|p| p.join("Mozilla").join("Firefox").join("Profiles"))
@@ -79,12 +75,7 @@ impl KnownBrowser {
                 dirs::home_dir().map(|p| p.join(".config").join("google-chrome"))
             }
             #[cfg(target_os = "macos")]
-            KnownBrowser::Chrome => dirs::home_dir().map(|p| {
-                p.join("Library")
-                    .join("Application Support")
-                    .join("Google")
-                    .join("Chrome")
-            }),
+            KnownBrowser::Chrome => dirs::data_dir().map(|p| p.join("Google").join("Chrome")),
             #[cfg(target_os = "windows")]
             KnownBrowser::Chrome => {
                 dirs::data_local_dir().map(|p| p.join("Google").join("Chrome").join("User Data"))
@@ -92,11 +83,7 @@ impl KnownBrowser {
             #[cfg(target_os = "linux")]
             KnownBrowser::Chromium => dirs::home_dir().map(|p| p.join(".config").join("chromium")),
             #[cfg(target_os = "macos")]
-            KnownBrowser::Chromium => dirs::home_dir().map(|p| {
-                p.join("Library")
-                    .join("Application Support")
-                    .join("Chromium")
-            }),
+            KnownBrowser::Chromium => dirs::data_dir().map(|p| p.join("Chromium")),
             #[cfg(target_os = "windows")]
             KnownBrowser::Chromium => {
                 dirs::data_local_dir().map(|p| p.join("Chromium").join("User Data"))

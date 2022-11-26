@@ -71,7 +71,7 @@ fn get_chromium_cookies(
 }
 
 fn get_firefox_cookies(path: &std::path::Path) -> Vec<Result<Vec<Cookie>, Error>> {
-    get_sqlite_dbs(path, 2, "cookies.sqlite")
+    get_sqlite_dbs(path, 3, "cookies.sqlite")
         .iter()
         .map(|filepath| {
             let connection = Connection::open_sqlite(filepath)?;
