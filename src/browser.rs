@@ -23,6 +23,10 @@ pub enum KnownBrowser {
     ///
     /// [`Chrome`]: https://www.google.com/chrome/
     Chrome,
+    /// The [`Beta`] release of the Chrome web browser from Google.
+    ///
+    /// [`Beta`]: https://www.google.com/chrome/beta/
+    ChromeBeta,
     /// The [`Chromium`] open-source web browser maintained by Google.
     ///
     /// [`Chromium`]: https://www.chromium.org/chromium-projects/
@@ -45,6 +49,12 @@ impl KnownBrowser {
             KnownBrowser::Chrome => KnownEngine::Chromium("Chrome"),
             #[cfg(target_os = "windows")]
             KnownBrowser::Chrome => KnownEngine::Chromium(""),
+            #[cfg(target_os = "linux")]
+            KnownBrowser::ChromeBeta => KnownEngine::Chromium("Chrome Safe Storage"),
+            #[cfg(target_os = "macos")]
+            KnownBrowser::ChromeBeta => KnownEngine::Chromium("Chrome"),
+            #[cfg(target_os = "windows")]
+            KnownBrowser::ChromeBeta => KnownEngine::Chromium(""),
             #[cfg(target_os = "linux")]
             KnownBrowser::Chromium => KnownEngine::Chromium("Chromium Safe Storage"),
             #[cfg(target_os = "macos")]
@@ -80,6 +90,17 @@ impl KnownBrowser {
             KnownBrowser::Chrome => {
                 dirs::data_local_dir().map(|p| p.join("Google").join("Chrome").join("User Data"))
             }
+            #[cfg(target_os = "linux")]
+            KnownBrowser::ChromeBeta => {
+                dirs::home_dir().map(|p| p.join(".config").join("google-chrome-beta"))
+            }
+            #[cfg(target_os = "macos")]
+            KnownBrowser::ChromeBeta => {
+                dirs::data_dir().map(|p| p.join("Google").join("Chrome Beta"))
+            }
+            #[cfg(target_os = "windows")]
+            KnownBrowser::ChromeBeta => dirs::data_local_dir()
+                .map(|p| p.join("Google").join("Chrome Beta").join("User Data")),
             #[cfg(target_os = "linux")]
             KnownBrowser::Chromium => dirs::home_dir().map(|p| p.join(".config").join("chromium")),
             #[cfg(target_os = "macos")]
