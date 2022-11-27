@@ -147,6 +147,7 @@ fn nom_cookie(input: &[u8]) -> nom::IResult<&[u8], Cookie> {
             is_http_only,
             creation_time,
             expiration_time,
+            // TODO: support same_site
             same_site: None,
             last_accessed: None,
         },

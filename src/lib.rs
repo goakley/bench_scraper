@@ -28,8 +28,7 @@ use strum::IntoEnumIterator;
 use crate::crypt::*;
 use crate::sqlite::*;
 
-pub use crate::binary::*;
-
+pub use crate::binary::parse_binarycookie_file;
 pub use crate::browser::KnownBrowser;
 pub use crate::browser::KnownEngine;
 pub use crate::cookie::Cookie;
@@ -85,6 +84,18 @@ fn get_firefox_cookies(path: &std::path::Path) -> Vec<Result<Vec<Cookie>, Error>
         .collect()
 }
 
+fn get_safari_cookies(path: &std::path::Path) -> Result<Vec<Cookie>, Error> {
+    let mut all_cookies = Vec::default();
+    for entry in (path.read_dir()?).flatten() {
+        if entry.path().extension() == Some(std::ffi::OsStr::new("binarycookies")) {
+            let contents: Vec<u8> = std::fs::read(entry.path())?;
+            let mut cookies = parse_binarycookie_file(&contents)?;
+            all_cookies.append(&mut cookies);
+        }
+    }
+    Ok(all_cookies)
+}
+
 /// A set of cookies that come from a specific browser.
 pub struct KnownBrowserCookies {
     /// The browser from which the cookies were pulled.
@@ -134,6 +145,11 @@ pub fn find_cookies_at(browser: KnownBrowser, path: &std::path::Path) -> Vec<Kno
                         cookies,
                     });
                 }
+            }
+        }
+        KnownEngine::Safari => {
+            if let Ok(cookies) = get_safari_cookies(path) {
+                all_cookies.push(KnownBrowserCookies { browser, cookies });
             }
         }
     };

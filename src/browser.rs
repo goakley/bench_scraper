@@ -9,6 +9,8 @@ pub enum KnownEngine {
     Firefox,
     /// The Chromium web engine, powering Chromium, Chrome, and various other derivatives.
     Chromium(&'static str),
+    /// The Safari web engine, powering Safari.
+    Safari,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, EnumIter)]
@@ -36,6 +38,11 @@ pub enum KnownBrowser {
     /// [`Microsoft Edge`]: https://www.microsoft.com/edge/
     #[cfg(target_os = "windows")]
     Edge,
+    /// [`Safari`], the MacOS default browser.
+    ///
+    /// [`Safari`]: https://www.apple.com/safari/
+    #[cfg(target_os = "macos")]
+    Safari,
 }
 
 impl KnownBrowser {
@@ -63,6 +70,8 @@ impl KnownBrowser {
             KnownBrowser::Chromium => KnownEngine::Chromium(""),
             #[cfg(target_os = "windows")]
             KnownBrowser::Edge => KnownEngine::Chromium(""),
+            #[cfg(target_os = "macos")]
+            KnownBrowser::Safari => KnownEngine::Safari,
         }
     }
 
@@ -113,6 +122,8 @@ impl KnownBrowser {
             KnownBrowser::Edge => {
                 dirs::data_local_dir().map(|p| p.join("Microsoft").join("Edge").join("User Data"))
             }
+            #[cfg(target_os = "macos")]
+            KnownBrowser::Safari => dirs::home_dir().map(|p| p.join("Library").join("Cookies")),
         }
     }
 }

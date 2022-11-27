@@ -15,6 +15,8 @@ pub enum Error {
     IOError(std::io::Error),
     /// A failure while working with SQLite-backed cookie storage.
     SQLError(rusqlite::Error),
+    /// A failure while parsing binary cookie data.
+    BinaryError(nom::error::Error<Vec<u8>>),
 }
 
 impl From<pbkdf2::password_hash::errors::Error> for Error {
@@ -39,5 +41,14 @@ impl From<std::io::Error> for Error {
 impl From<rusqlite::Error> for Error {
     fn from(err: rusqlite::Error) -> Self {
         Error::SQLError(err)
+    }
+}
+
+impl From<nom::error::Error<&[u8]>> for Error {
+    fn from(err: nom::error::Error<&[u8]>) -> Self {
+        Error::BinaryError(nom::error::Error {
+            input: err.input.to_vec(),
+            code: err.code,
+        })
     }
 }
