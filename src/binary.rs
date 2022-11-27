@@ -1,7 +1,7 @@
 #![warn(missing_docs)]
 use nom::Finish;
 
-use crate::Cookie;
+use crate::{Cookie, SameSite};
 
 fn take_offset_str(offset: usize, input: &[u8]) -> nom::IResult<&[u8], String> {
     let (r, _) = nom::bytes::complete::take(offset)(input)?;
@@ -10,6 +10,8 @@ fn take_offset_str(offset: usize, input: &[u8]) -> nom::IResult<&[u8], String> {
     // TODO: don't unwrap
     Ok((r, std::str::from_utf8(x).unwrap().to_string()))
 }
+
+// https://gist.github.com/creachadair/ba843bd92c2cfc78dc5e1a53b44775a3
 
 /// Parses a binarycookie payload into actual cookies.
 pub fn parse_binarycookie_file(input: &[u8]) -> Result<Vec<Cookie>, nom::error::Error<&[u8]>> {
@@ -40,9 +42,9 @@ fn nom_file(input: &[u8]) -> nom::IResult<&[u8], Vec<Cookie>> {
         all_cookies.append(&mut cookies);
     }
     println!("PAGESDONE {:?}", rem);
-    //let (r, _) = nom::bytes::complete::take(8usize)(rem)?;
-    //let (r, _) = nom::combinator::eof(r)?;
-    Ok((rem, all_cookies))
+    let (r, _checksum) = nom::bytes::complete::take(4usize)(rem)?;
+    // we specifically don't care about the policy so we stop here instead of parsing the rest of the file
+    Ok((r, all_cookies))
 }
 
 fn nom_page(input: &[u8]) -> nom::IResult<&[u8], Vec<Cookie>> {
@@ -98,6 +100,12 @@ fn nom_cookie(input: &[u8]) -> nom::IResult<&[u8], Cookie> {
     let (r, cookieflag) = nom::number::complete::le_u32(r)?;
     let is_secure = (cookieflag & 1) != 0;
     let is_http_only = (cookieflag & 4) != 0;
+    let same_site = match cookieflag & 56 {
+        32 => Some(SameSite::None),
+        40 => Some(SameSite::Lax),
+        56 => Some(SameSite::Strict),
+        _ => None,
+    };
     let (r, _) = nom::bytes::complete::take(4usize)(r)?;
     let (r, host_offset) = nom::number::complete::le_u32(r)?;
     let (r, name_offset) = nom::number::complete::le_u32(r)?;
@@ -105,11 +113,9 @@ fn nom_cookie(input: &[u8]) -> nom::IResult<&[u8], Cookie> {
     let (r, value_offset) = nom::number::complete::le_u32(r)?;
     let (r, _) = nom::bytes::complete::tag(b"\x00\x00\x00\x00\x00\x00\x00\x00")(r)?;
     let (r, expiry_number) = nom::number::complete::le_f64(r)?;
-    // TODO: is this local time?
     let expiration_time =
         time::OffsetDateTime::from_unix_timestamp((expiry_number as i64) + 978307200i64).ok();
     let (r, creation_number) = nom::number::complete::le_f64(r)?;
-    // TODO: is this local time?
     let creation_time =
         time::OffsetDateTime::from_unix_timestamp((creation_number as i64) + 978307200i64)
             .ok()
@@ -147,8 +153,7 @@ fn nom_cookie(input: &[u8]) -> nom::IResult<&[u8], Cookie> {
             is_http_only,
             creation_time,
             expiration_time,
-            // TODO: support same_site
-            same_site: None,
+            same_site,
             last_accessed: None,
         },
     ))
@@ -196,10 +201,10 @@ mod tests {
         assert_eq!(
             r,
             &[
-                0, 0, 28, 98, 7, 23, 32, 5, 0, 0, 0, 75, 98, 112, 108, 105, 115, 116, 48, 48, 209,
-                1, 2, 95, 16, 24, 78, 83, 72, 84, 84, 80, 67, 111, 111, 107, 105, 101, 65, 99, 99,
-                101, 112, 116, 80, 111, 108, 105, 99, 121, 16, 2, 8, 11, 38, 0, 0, 0, 0, 0, 0, 1,
-                1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 40
+                7, 23, 32, 5, 0, 0, 0, 75, 98, 112, 108, 105, 115, 116, 48, 48, 209, 1, 2, 95, 16,
+                24, 78, 83, 72, 84, 84, 80, 67, 111, 111, 107, 105, 101, 65, 99, 99, 101, 112, 116,
+                80, 111, 108, 105, 99, 121, 16, 2, 8, 11, 38, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0,
+                0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 40
             ]
         );
         assert_eq!(cookies.len(), 4);
@@ -220,7 +225,7 @@ mod tests {
         ]
         .to_vec();
         let (r, cookies) = nom_page(&input).unwrap();
-        assert_eq!(r, &[]);
+        assert_eq!(r, (&[] as &[u8]));
         assert_eq!(
             cookies,
             vec![
