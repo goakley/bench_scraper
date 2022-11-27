@@ -15,6 +15,7 @@
 //!
 //! This library attempts to support a wide range of operating systems and browsers, however functionality for certain browsers on certain systems may fail at runtime.
 #![warn(missing_docs)]
+mod binary;
 mod browser;
 mod cookie;
 mod crypt;
@@ -26,6 +27,8 @@ use strum::IntoEnumIterator;
 
 use crate::crypt::*;
 use crate::sqlite::*;
+
+pub use crate::binary::*;
 
 pub use crate::browser::KnownBrowser;
 pub use crate::browser::KnownEngine;

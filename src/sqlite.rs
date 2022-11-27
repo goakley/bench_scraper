@@ -61,7 +61,7 @@ fn parse_chromium_sql_row(
             creation_time: ct,
             expiration_time,
             same_site,
-            last_accessed: lat,
+            last_accessed: Some(lat),
         }),
         _ => None,
     })
@@ -95,7 +95,7 @@ fn parse_firefox_sql_row(row: &rusqlite::Row) -> Result<Option<Cookie>, rusqlite
             creation_time: ct,
             expiration_time,
             same_site,
-            last_accessed: lat,
+            last_accessed: Some(lat),
         })),
         _ => Ok(None),
     }

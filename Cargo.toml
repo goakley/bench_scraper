@@ -25,6 +25,7 @@ dirs = "4.0.0"
 json_dotpath = "1.1.0"
 libsqlite3-sys = "0.25.2"
 log = "0.4.17"
+nom = "7.1.1"
 pbkdf2 = { version = "0.11.0", features = ["sha1"] }
 reqwest = { version = "0.11.0", default-features = false, features = ["cookies"], optional = true }
 rusqlite = { version = "0.28.0", features = ["bundled"] }

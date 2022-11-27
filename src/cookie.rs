@@ -32,8 +32,8 @@ pub struct Cookie {
     pub expiration_time: Option<time::OffsetDateTime>,
     /// The SameSite setting for the cookie (which may not have been specified).
     pub same_site: Option<SameSite>,
-    /// The last time the cookie was accessed by the browser.
-    pub last_accessed: time::OffsetDateTime,
+    /// The last time the cookie was accessed by the browser (if this data is tracked).
+    pub last_accessed: Option<time::OffsetDateTime>,
 }
 
 impl Cookie {
