@@ -13,6 +13,13 @@
 //! }
 //! ```
 //!
+//! Using the `reqwest` feature, you can turn an iterator of cookies directly into a cookie jar.
+//!
+//! ```rust
+//! let browser_cookie = bench_scraper::find_cookies().unwrap().into_iter().next().unwrap();
+//! let jar: reqwest::cookie::Jar = browser_cookie.cookies.into_iter().collect();
+//! ```
+//!
 //! This library attempts to support a wide range of operating systems and browsers, however functionality for certain browsers on certain systems may fail at runtime.
 #![warn(missing_docs)]
 mod binary;

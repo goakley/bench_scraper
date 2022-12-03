@@ -24,6 +24,14 @@ fn main() {
 }
 ```
 
+The `reqwest` feature on this crate allows you to turn an iterator of cookies into a reqwest cookie jar.
+This lets you make web requests using the same state as a browser.
+
+```rust
+let browser_cookie = bench_scraper::find_cookies().unwrap().into_iter().next().unwrap();
+let jar: reqwest::cookie::Jar = browser_cookie.cookies.into_iter().collect();
+```
+
 ## Browser Support
 
 This library maintains a list of known browsers that can be used with the wildcard `find_cookies()` function.

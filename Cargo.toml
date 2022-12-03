@@ -1,6 +1,6 @@
 [package]
 name = "bench_scraper"
-version = "0.4.0"
+version = "0.4.1"
 edition = "2021"
 authors = ["Glen Oakley <goakley123@gmail.com>"]
 description = "A library for grabbing browser cookies from a filesystem"
@@ -38,7 +38,10 @@ time = { version = "0.3.15", features = ["formatting"] }
 walkdir = "2.3.2"
 
 [dev-dependencies]
+bench_scraper = { path = ".", features = ["reqwest"] }
 csv = "1.1.6"
+regex = "1.7.0"
+reqwest = { version = "0.11.0", default-features = false, features = ["blocking", "cookies", "default-tls"] }
 
 [target.'cfg(target_os="linux")'.dependencies]
 secret-service = "2.0.2"
