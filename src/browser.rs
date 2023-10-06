@@ -36,7 +36,7 @@ pub enum KnownBrowser {
     /// [`Microsoft Edge`], the Windows 10/11 default browser.
     ///
     /// [`Microsoft Edge`]: https://www.microsoft.com/edge/
-    #[cfg(target_os = "windows")]
+    #[cfg(any(target_os = "macos", target_os = "windows"))]
     Edge,
     /// [`Safari`], the MacOS default browser.
     ///
@@ -70,6 +70,8 @@ impl KnownBrowser {
             KnownBrowser::Chromium => KnownEngine::Chromium(""),
             #[cfg(target_os = "windows")]
             KnownBrowser::Edge => KnownEngine::Chromium(""),
+            #[cfg(target_os = "macos")]
+            KnownBrowser::Edge => KnownEngine::Chromium("Microsoft Edge"),
             #[cfg(target_os = "macos")]
             KnownBrowser::Safari => KnownEngine::Safari,
         }
@@ -122,6 +124,8 @@ impl KnownBrowser {
             KnownBrowser::Edge => {
                 dirs::data_local_dir().map(|p| p.join("Microsoft").join("Edge").join("User Data"))
             }
+            #[cfg(target_os = "macos")]
+            KnownBrowser::Edge => dirs::data_dir().map(|p| p.join("Microsoft Edge")),
             #[cfg(target_os = "macos")]
             KnownBrowser::Safari => dirs::home_dir().map(|p| p.join("Library").join("Cookies")),
         }
