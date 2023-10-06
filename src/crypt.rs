@@ -134,7 +134,7 @@ pub fn get_chromium_master_key(name: &str, _path: &std::path::Path) -> Result<Ch
         Some(pbkdf2::Algorithm::Pbkdf2Sha1.ident()),
         None,
         pbkdf2::Params {
-            rounds: 1,
+            rounds: 1003,
             output_length: 16,
         },
         salt.as_salt(),
